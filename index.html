@@ -157,7 +157,7 @@ function state(text,type){let e=q('#msStatus');if(!e)return;e.textContent=text;e
 function clientId(){return localStorage.getItem(CLIENT_KEY)||'8b3472ce-d1b8-4bf6-99fe-b01b37abeced'}
 function makeApp(){
   if(app||!clientId()||!window.msal)return app;
-  app=new msal.PublicClientApplication({auth:{clientId:clientId(),authority:'https://login.microsoftonline.com/common',redirectUri:location.origin+'/'},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}});
+  app=new msal.PublicClientApplication({auth:{clientId:clientId(),authority:'https://login.microsoftonline.com/common',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}});
   account=app.getAllAccounts()[0]||null;
   return app;
 }
@@ -226,7 +226,7 @@ q('#msSaveId').onclick=function(){let id=q('#msClientId').value.trim();if(!/^[0-
 q('#msLogin').onclick=async function(){try{app=null;account=null;makeApp();let r=await app.loginPopup({scopes:SCOPES,prompt:'select_account'});account=r.account;refresh();await downloadAndMerge()}catch(e){state((e&&e.message)||'登录未完成','error')}};
 q('#msSync').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');await downloadAndMerge()}catch(e){state(e.message,'error')}};
 q('#msUpload').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');if(confirm('确定用本机数据覆盖 OneDrive 中的手账数据吗？'))await upload(false)}catch(e){state(e.message,'error')}};
-q('#msLogout').onclick=async function(){makeApp();if(app&&account)await app.logoutPopup({account:account,postLogoutRedirectUri:location.origin+'/'});account=null;refresh()};
+q('#msLogout').onclick=async function(){makeApp();if(app&&account)await app.logoutPopup({account:account,postLogoutRedirectUri:location.origin+location.pathname});account=null;refresh()};
 let oldSave=save;save=function(){oldSave();queue()};
 setTimeout(async function(){try{makeApp();if(app){account=app.getAllAccounts()[0]||null;if(account)await downloadAndMerge()}}catch(e){}},800);
 })();
