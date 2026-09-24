@@ -165,10 +165,10 @@ function makeApp(){
 async function token(interactive){
   makeApp();
   if(!app)throw new Error('请先填写 Microsoft 应用编号');
-  if(!account&&interactive){let r=await app.loginPopup({scopes:SCOPES,prompt:'select_account'});account=r.account}
+  if(!account)throw new Error('请先登录 Microsoft 账户')
   if(!account)throw new Error('请先登录 Microsoft 账户');
   try{return(await app.acquireTokenSilent({scopes:SCOPES,account:account})).accessToken}
-  catch(e){if(!interactive)throw e;return(await app.acquireTokenPopup({scopes:SCOPES,account:account})).accessToken}
+  catch(e){if(!interactive)throw e;await app.acquireTokenRedirect({scopes:SCOPES,account:account});throw new Error('正在转到 Microsoft 重新登录…')}
 }
 async function graph(method,body,interactive){
   let access=await token(interactive!==false),headers={Authorization:'Bearer '+access};
@@ -230,11 +230,11 @@ document.body.appendChild(modal);
 button.onclick=function(){modal.classList.remove('hidden');refresh()};
 q('#msClose').onclick=function(){modal.classList.add('hidden')};modal.onclick=function(e){if(e.target===modal)modal.classList.add('hidden')};
 q('#msSaveId').onclick=function(){let id=q('#msClientId').value.trim();if(!/^[0-9a-f-]{36}$/i.test(id)){state('应用编号格式不正确。','error');return}localStorage.setItem(CLIENT_KEY,id);app=null;account=null;refresh()};
-q('#msLogin').onclick=async function(){try{app=null;account=null;makeApp();let r=await app.loginPopup({scopes:SCOPES,prompt:'select_account'});account=r.account;refresh();await downloadAndMerge()}catch(e){state((e&&e.message)||'登录未完成','error')}};
+q('#msLogin').onclick=async function(){try{app=null;account=null;makeApp();sessionStorage.setItem('life-journal-sync-after-login','1');await app.loginRedirect({scopes:SCOPES,prompt:'select_account'})}catch(e){state((e&&e.message)||'登录未完成','error')}};
 q('#msSync').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');await downloadAndMerge()}catch(e){state(e.message,'error')}};
 q('#msUpload').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');if(confirm('确定用本机数据覆盖 OneDrive 中的手账数据吗？'))await upload(false)}catch(e){state(e.message,'error')}};
-q('#msLogout').onclick=async function(){makeApp();if(app&&account)await app.logoutPopup({account:account,postLogoutRedirectUri:location.origin+location.pathname});account=null;refresh()};
+q('#msLogout').onclick=async function(){makeApp();if(app&&account)await app.logoutRedirect({account:account,postLogoutRedirectUri:location.origin+location.pathname});account=null;refresh()};
 let oldSave=save;save=function(){oldSave();queue()};
-setTimeout(async function(){try{makeApp();if(app){account=app.getAllAccounts()[0]||null;if(account)await downloadAndMerge()}}catch(e){}},800);
+setTimeout(async function(){try{makeApp();if(app){let response=await app.handleRedirectPromise();account=(response&&response.account)||app.getAllAccounts()[0]||null;refresh();if(account){let first=sessionStorage.getItem('life-journal-sync-after-login')==='1';sessionStorage.removeItem('life-journal-sync-after-login');if(first||data.oneDriveSyncedAt)await downloadAndMerge()}}}catch(e){state((e&&e.message)||'Microsoft 登录未完成','error')}},500);
 })();
 </script></body></html>
