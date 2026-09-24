@@ -120,7 +120,7 @@ let priorRender=render;render=function(){if(active==='backcover'){renderBackCove
 updateBookNav();
 })();
 </script><script id="onedrive-script">
-(function(){
+(function(){if(location.protocol!=='file:')return;
 let syncHandle=null,syncTimer=null;const DBNAME='life-journal-sync',STORE='handles',HANDLEKEY='onedrive-json';
 function openSyncDb(){return new Promise(function(resolve,reject){let r=indexedDB.open(DBNAME,1);r.onupgradeneeded=function(){if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=function(){resolve(r.result)};r.onerror=function(){reject(r.error)}})}
 async function rememberHandle(h){let db=await openSyncDb();return new Promise(function(resolve,reject){let tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(h,HANDLEKEY);tx.oncomplete=resolve;tx.onerror=function(){reject(tx.error)}})}
@@ -131,7 +131,7 @@ async function ensurePermission(handle){if(!handle)return false;let o={mode:'rea
 async function writeCloud(silent){if(!syncHandle)return false;try{if(!await ensurePermission(syncHandle)){if(!silent)status('未获得文件写入权限。','error');return false}data.oneDriveSyncedAt=new Date().toISOString();let w=await syncHandle.createWritable();await w.write(JSON.stringify(data,null,2));await w.close();status('已同步到 OneDrive · '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),'connected');return true}catch(e){status('同步失败：请重新连接同步文件。','error');return false}}
 function queueCloud(){if(!syncHandle)return;clearTimeout(syncTimer);syncTimer=setTimeout(function(){writeCloud(true)},1200)}
 let priorSave=save;save=function(){priorSave();queueCloud()};
-let btn=document.createElement('button');btn.className='onedrive-btn';btn.id='oneDriveBtn';btn.textContent='☁ OneDrive 同步';document.querySelector('#settings .data').appendChild(btn);
+let btn=document.createElement('button');btn.className='onedrive-btn';btn.id='oneDriveBtn';btn.textContent='☁ OneDrive 同步';document.querySelector('#modal .data').appendChild(btn);
 let modal=document.createElement('div');modal.className='modal-bg hidden';modal.id='oneDriveModal';modal.innerHTML='<section class="modal cloud-card"><div class="modal-head"><div><div class="cloud-logo">☁</div><h2>OneDrive 同步</h2></div><button class="close" id="cloudClose">×</button></div><div class="cloud-status" id="cloudStatus"></div><div class="cloud-actions"><button class="primary" id="cloudConnect">连接 OneDrive 文件</button><button id="cloudWrite">立即上传最新数据</button><button id="cloudRead">读取 OneDrive 数据</button><button id="cloudExport">导出同步文件</button></div><input id="cloudFileInput" type="file" accept="application/json,.json" hidden><p class="cloud-help">电脑端：请选择 OneDrive 同步文件夹内的“随手帐同步数据.json”，连接后将自动保存。<br>手机端：点击“读取 OneDrive 数据”，通过系统文件选择器选择 OneDrive 中的同步文件；上传时使用“导出同步文件”并保存到 OneDrive。</p></section>';document.body.appendChild(modal);
 btn.onclick=function(){modal.classList.remove('hidden');updateCloudStatus()};document.querySelector('#cloudClose').onclick=function(){modal.classList.add('hidden')};modal.onclick=function(e){if(e.target===modal)modal.classList.add('hidden')};
 document.querySelector('#cloudConnect').onclick=async function(){if(!window.showSaveFilePicker){status('当前浏览器不支持直接连接，请使用导出与读取方式。','error');return}try{syncHandle=await showSaveFilePicker({suggestedName:'随手帐同步数据.json',types:[{description:'随手帐数据',accept:{'application/json':['.json']}}]});await rememberHandle(syncHandle);await writeCloud(false)}catch(e){if(e.name!=='AbortError')status('连接失败，请重试。','error')}};
@@ -150,7 +150,8 @@ loadHandle();
 (function(){
 const CLIENT_KEY='life-journal-ms-client-id';
 const SCOPES=['Files.ReadWrite.AppFolder'];
-const GRAPH_FILE='https://graph.microsoft.com/v1.0/me/drive/special/approot:/journal-data.json:/content';
+const GRAPH_ROOT='https://graph.microsoft.com/v1.0/me/drive/special/approot';
+let appRootId=null;
 let app=null,account=null,uploadTimer=null,busy=false;
 function q(s){return document.querySelector(s)}
 function state(text,type){let e=q('#msStatus');if(!e)return;e.textContent=text;e.className='ms-status '+(type||'')}
@@ -169,10 +170,16 @@ async function token(interactive){
   try{return(await app.acquireTokenSilent({scopes:SCOPES,account:account})).accessToken}
   catch(e){if(!interactive)throw e;return(await app.acquireTokenPopup({scopes:SCOPES,account:account})).accessToken}
 }
-async function graph(method,body){
-  let access=await token(true),headers={Authorization:'Bearer '+access};
+async function graph(method,body,interactive){
+  let access=await token(interactive!==false),headers={Authorization:'Bearer '+access};
+  if(!appRootId){
+    let root=await fetch(GRAPH_ROOT,{headers:{Authorization:'Bearer '+access}});
+    if(!root.ok)throw new Error('无法打开 OneDrive 应用文件夹（'+root.status+'）');
+    appRootId=(await root.json()).id;
+  }
+  let fileUrl='https://graph.microsoft.com/v1.0/me/drive/items/'+encodeURIComponent(appRootId)+':/journal-data.json:/content';
   if(body!==undefined)headers['Content-Type']='application/json; charset=utf-8';
-  return fetch(GRAPH_FILE,{method:method,headers:headers,body:body});
+  return fetch(fileUrl,{method:method,headers:headers,body:body});
 }
 async function upload(silent){
   if(busy||!account)return false;
@@ -214,7 +221,7 @@ function refresh(){
   else state('应用编号已保存，请登录 Microsoft 账户。');
   q('#msLogin').textContent=account?'切换账户':'登录 Microsoft';
 }
-let host=q('#settings .data');
+let host=q('#modal .data');
 if(!host)return;
 let button=document.createElement('button');button.id='msOneDriveBtn';button.className='ms-sync-btn';button.textContent='☁ Microsoft OneDrive';host.appendChild(button);
 let modal=document.createElement('div');modal.className='modal-bg hidden';modal.id='msOneDriveModal';
