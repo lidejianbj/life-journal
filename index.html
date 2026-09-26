@@ -195,7 +195,7 @@ async function upload(silent){
   finally{busy=false}
 }
 function queue(){if(!account)return;clearTimeout(uploadTimer);uploadTimer=setTimeout(function(){upload(true)},1400)}
-async function downloadAndMerge(){
+async function downloadAndMerge(forceCloud){
   if(busy)return;busy=true;
   try{
     let r=await graph('GET');
@@ -204,9 +204,9 @@ async function downloadAndMerge(){
     let cloud=await r.json();
     if(!cloud||!Array.isArray(cloud.entries))throw new Error('云端数据格式无效');
     let cloudTime=Date.parse(cloud.oneDriveSyncedAt||0),localTime=Date.parse(data.oneDriveSyncedAt||0);
-    if(cloudTime>localTime){
+    if(forceCloud||cloudTime>localTime){
       data=cloud;localStorage.setItem(KEY,JSON.stringify(data));
-      state('已读取 OneDrive 最新数据','ok');setTimeout(function(){location.reload()},400);return
+      state('已从 OneDrive 下载数据 · '+(cloud.oneDriveSyncedAt?new Date(cloud.oneDriveSyncedAt).toLocaleString('zh-CN'):'时间未知'),'ok');setTimeout(function(){location.reload()},700);return
     }
     if(localTime>cloudTime){busy=false;await upload(false);return}
     state('电脑与手机数据已是最新','ok');
@@ -231,7 +231,7 @@ button.onclick=function(){modal.classList.remove('hidden');refresh()};
 q('#msClose').onclick=function(){modal.classList.add('hidden')};modal.onclick=function(e){if(e.target===modal)modal.classList.add('hidden')};
 q('#msSaveId').onclick=function(){let id=q('#msClientId').value.trim();if(!/^[0-9a-f-]{36}$/i.test(id)){state('应用编号格式不正确。','error');return}localStorage.setItem(CLIENT_KEY,id);app=null;account=null;refresh()};
 q('#msLogin').onclick=async function(){try{app=null;account=null;makeApp();sessionStorage.setItem('life-journal-sync-after-login','1');await app.loginRedirect({scopes:SCOPES,prompt:'select_account'})}catch(e){state((e&&e.message)||'登录未完成','error')}};
-q('#msSync').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');await downloadAndMerge()}catch(e){state(e.message,'error')}};
+q('#msSync').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');state('正在从 OneDrive 下载手机端数据…');await downloadAndMerge(true)}catch(e){state(e.message,'error')}};
 q('#msUpload').onclick=async function(){try{makeApp();account=app&&app.getAllAccounts()[0];if(!account)throw new Error('请先登录 Microsoft 账户');if(confirm('确定用本机数据覆盖 OneDrive 中的手账数据吗？'))await upload(false)}catch(e){state(e.message,'error')}};
 q('#msLogout').onclick=async function(){makeApp();if(app&&account)await app.logoutRedirect({account:account,postLogoutRedirectUri:location.origin+location.pathname});account=null;refresh()};
 let oldSave=save;save=function(){oldSave();queue()};
