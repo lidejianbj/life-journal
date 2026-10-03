@@ -52,6 +52,19 @@ body{padding-bottom:68px}.book-navigation{position:fixed;left:50%;bottom:calc(14
 .profile-mode .profile-kraft textarea::placeholder{color:#503522;opacity:.78}
 @media(max-width:780px){.profile-mode .profile-card{padding:24px 22px}.profile-mode .profile-kraft{padding:42px 34px 38px}.profile-mode .profile-kraft textarea{min-height:360px}}
 @media(max-width:470px){.profile-mode .form-grid{grid-template-columns:1fr}.profile-mode .field.wide,.profile-mode .form-section{grid-column:1}.profile-mode .kraft-head{gap:10px}.profile-mode .kraft-head h3{font-size:18px}.profile-mode .kraft-head p{font-size:8px;letter-spacing:.08em}}
+</style><style id="folded-page-corner-style">
+.page-corner{width:46px;height:38px;bottom:0;opacity:1;filter:none;overflow:visible;background:transparent!important}
+.page-corner-prev{left:0}
+.page-corner-next{right:0}
+.page-corner:before{content:"";position:absolute;right:0;bottom:0;width:32px;height:32px;border-radius:0 0 5px 0;background:linear-gradient(225deg,transparent 0 46%,#bba78e 47% 50%,#f5ecdf 51% 76%,#d9c8b4 100%);box-shadow:5px 6px 7px #2d1e174d;filter:drop-shadow(-4px -3px 4px #3e2a1c3d);transform-origin:right bottom;transition:transform .18s ease,filter .18s ease}
+.page-corner:after{content:"";position:absolute;right:0;bottom:0;width:32px;height:32px;border-radius:0 0 5px 0;background:linear-gradient(225deg,transparent 0 48%,#ffffff42 49% 52%,transparent 53%);pointer-events:none}
+.page-corner-prev:before,.page-corner-prev:after{right:auto;left:0;transform:scaleX(-1)}
+.page-corner:hover:before{transform:translateY(-2px);filter:drop-shadow(-6px -5px 5px #3e2a1c55)}
+.page-corner-prev:hover:before{transform:scaleX(-1) translateY(-2px)}
+.page-corner span{display:none!important}
+.page-corner:disabled{opacity:.22}
+.page-corner:disabled:before{filter:none;box-shadow:2px 3px 4px #2d1e1728}
+@media(max-width:820px){.page-corner{position:absolute!important;bottom:0!important;width:46px;height:38px}.page-corner-prev{left:0!important}.page-corner-next{right:0!important}}
 </style></head><body><div class="app">
 <header class="top"><div class="brand"><i>拾</i><span>随手帐</span></div><div class="spacer"></div><button id="settingsBtn">设定</button><button class="primary" id="newBtn">＋ 新建一页</button></header>
 <nav class="tabs" id="tabs"></nav>
