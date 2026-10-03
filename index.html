@@ -375,4 +375,40 @@ function applyDirect(image){let model=editingData();model.title=document.querySe
 document.querySelector('#directCoverClose').onclick=closeEditor;document.querySelector('#directCoverCancel').onclick=closeEditor;editor.onclick=function(e){if(e.target===editor)closeEditor()};document.querySelector('#directCoverClear').onclick=function(){clearImage=true;document.querySelector('#directCoverImage').value='';document.querySelector('#directCoverImageStatus').textContent='保存后将清除背景图片。'};document.querySelector('#directCoverSave').onclick=function(){let file=document.querySelector('#directCoverImage').files[0];if(file){if(file.size>2500000){alert('请选择小于2.5MB的图片');return}let reader=new FileReader;reader.onload=function(){applyDirect(reader.result)};reader.onerror=function(){alert('图片读取失败，请重新选择')};reader.readAsDataURL(file)}else applyDirect(clearImage?'':undefined)};
 function bindEditorSurface(selector,type,label){let surface=document.querySelector(selector);if(!surface)return;let hint=surface.querySelector('.cover-edit-hint');if(!hint){hint=document.createElement('span');hint.className='cover-edit-hint';hint.textContent='双击'+label+'编辑';surface.appendChild(hint)}surface.addEventListener('dblclick',function(e){if(e.target.closest('button'))return;e.preventDefault();openEditor(type)});hint.onclick=function(e){e.stopPropagation();openEditor(type)};let lastTap=0;surface.addEventListener('pointerup',function(e){if(e.pointerType!=='touch'||e.target.closest('button'))return;let now=Date.now();if(now-lastTap<360){e.preventDefault();openEditor(type);lastTap=0}else lastTap=now})}
 bindEditorSurface('#cover','cover','封面');bindEditorSurface('#backCover','backCover','封底');trimSettings();let earlierRender=render;render=function(){earlierRender();installTabs();trimSettings()};window.addEventListener('resize',alignBackTab);window.addEventListener('scroll',alignBackTab,{passive:true});installTabs();
+})();</script><style id="journal-unified-spread-style">
+/* 月度、日记、资料使用同一套纸质双页比例；内容超出时只在页内滚动。 */
+.workspace.planner-spread-mode{display:grid!important;width:min(1240px,calc(100% - 20px))!important;grid-template-columns:minmax(0,1fr) 220px!important;gap:0!important;height:720px!important;min-height:720px!important;max-height:720px!important}
+.workspace.planner-spread-mode:before{display:block!important;left:calc(100% - 227px)!important;top:8px!important;bottom:8px!important;height:auto!important}
+.workspace.planner-spread-mode .page,.workspace.planner-spread-mode .side{box-sizing:border-box;height:720px!important;min-height:720px!important;max-height:720px!important;overflow:hidden!important}
+.workspace.planner-spread-mode .page{display:flex;flex-direction:column}
+.workspace.planner-spread-mode #pageContent{display:flex;flex:1;min-height:0;flex-direction:column;overflow:hidden}
+.workspace.planner-spread-mode .diary-head,.workspace.planner-spread-mode .rich-head,.workspace.planner-spread-mode .rich-meta,.workspace.planner-spread-mode .page-foot{flex:0 0 auto}
+.workspace.planner-spread-mode .diary-body,.workspace.planner-spread-mode .rich-editor{box-sizing:border-box;flex:1 1 auto;height:auto!important;min-height:0!important;overflow-y:auto!important;scrollbar-gutter:stable}
+.workspace.planner-spread-mode .side{display:flex!important;flex-direction:column;padding:34px 18px 78px!important}
+.workspace.planner-spread-mode .side h2{flex:0 0 auto}
+.workspace.planner-spread-mode #entries{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable}
+.workspace.planner-spread-mode #entries .entry{grid-template-columns:minmax(0,1fr)!important;min-height:42px}
+.workspace.planner-spread-mode #entries .entry small,.workspace.planner-spread-mode #entries .entry time{display:none!important}
+.month-spread{height:720px!important;min-height:720px!important;max-height:720px!important}
+.month-main,.month-aside{box-sizing:border-box;min-height:0!important;max-height:720px!important;overflow-y:auto!important;scrollbar-gutter:stable}
+.month-aside .saved-months button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.back-cover-open{margin:22px auto 0;padding:10px 24px;border:1px solid #fff9;border-radius:999px;background:#fffdf2e8;color:#5c4033;font:700 12px/1.2 "Microsoft YaHei",sans-serif;letter-spacing:.08em;cursor:pointer;box-shadow:0 8px 20px #26170e45;transition:transform .16s ease,box-shadow .16s ease}
+.back-cover-open:hover{transform:translateY(-2px);box-shadow:0 12px 26px #26170e58}
+@media(max-width:820px){
+  .workspace.planner-spread-mode{display:block!important;width:calc(100% - 36px)!important;height:auto!important;min-height:0!important;max-height:none!important}
+  .workspace.planner-spread-mode:before{display:none!important}
+  .workspace.planner-spread-mode .page{height:620px!important;min-height:620px!important;max-height:620px!important}
+  .workspace.planner-spread-mode .side{height:440px!important;min-height:440px!important;max-height:440px!important;margin-top:14px;padding:22px 16px 64px!important}
+  .month-spread{height:auto!important;min-height:0!important;max-height:none!important}
+  .month-main{height:620px!important;min-height:620px!important;max-height:620px!important}
+  .month-aside{height:440px!important;min-height:440px!important;max-height:440px!important}
+}
+</style>
+<script id="journal-unified-spread-script">(function(){
+function plannerSection(){return active==='diary'||active==='materials'}
+function visibleBook(){return [document.querySelector('#workspace'),document.querySelector('#coverStage'),document.querySelector('#backCoverStage')].find(function(el){return el&&!el.classList.contains('hidden')})||document.querySelector('#workspace')}
+function addBackOpen(){let cover=document.querySelector('#backCover'),seal=cover&&cover.querySelector('.seal');if(!cover||document.querySelector('#backOpenBtn'))return;let button=document.createElement('button');button.id='backOpenBtn';button.className='back-cover-open';button.type='button';button.textContent='打开手账';button.onclick=function(e){e.stopPropagation();let front=document.querySelector('#openBtn');if(front)front.click()};if(seal)seal.before(button);else cover.firstElementChild.appendChild(button)}
+function alignBackTab(){let edge=document.querySelector('.book-edge-controls'),anchor=visibleBook();if(!edge||!anchor)return;let r=anchor.getBoundingClientRect(),w=edge.offsetWidth||34,h=edge.offsetHeight||62,corner=document.querySelector('#pageCornerNext'),cornerRect=corner&&corner.getBoundingClientRect(),cornerVisible=corner&&document.querySelector('#workspace')&&!document.querySelector('#workspace').classList.contains('hidden')&&cornerRect.height>0;let targetBottom=cornerVisible?cornerRect.top:r.bottom-70;edge.style.left=Math.max(0,Math.min(innerWidth-w-3,r.right+3))+'px';edge.style.top=Math.max(68,Math.min(innerHeight-h-12,targetBottom-h))+'px'}
+function finishLayout(){let workspace=document.querySelector('#workspace');if(workspace)workspace.classList.toggle('planner-spread-mode',plannerSection());addBackOpen();alignBackTab();requestAnimationFrame(alignBackTab)}
+let previousRender=render;render=function(){previousRender();finishLayout()};window.addEventListener('resize',alignBackTab);window.addEventListener('scroll',alignBackTab,{passive:true});finishLayout();
 })();</script></body></html>
