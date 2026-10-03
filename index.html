@@ -58,9 +58,9 @@ body{padding-bottom:68px}.book-navigation{position:fixed;left:50%;bottom:calc(14
 .page-corner-next{right:0}
 .page-corner:before{content:"";position:absolute;right:0;bottom:0;width:32px;height:32px;border-radius:0 0 5px 0;background:linear-gradient(225deg,transparent 0 46%,#bba78e 47% 50%,#f5ecdf 51% 76%,#d9c8b4 100%);box-shadow:5px 6px 7px #2d1e174d;filter:drop-shadow(-4px -3px 4px #3e2a1c3d);transform-origin:right bottom;transition:transform .18s ease,filter .18s ease}
 .page-corner:after{content:"";position:absolute;right:0;bottom:0;width:32px;height:32px;border-radius:0 0 5px 0;background:linear-gradient(225deg,transparent 0 48%,#ffffff42 49% 52%,transparent 53%);pointer-events:none}
-.page-corner-prev:before,.page-corner-prev:after{right:auto;left:0;transform:scaleX(-1)}
-.page-corner:hover:before{transform:translateY(-2px);filter:drop-shadow(-6px -5px 5px #3e2a1c55)}
-.page-corner-prev:hover:before{transform:scaleX(-1) translateY(-2px)}
+.page-corner-prev:before,.page-corner-prev:after{right:auto;left:0;transform:rotate(-90deg);transform-origin:center}
+.page-corner-next:before,.page-corner-next:after{transform:rotate(90deg);transform-origin:center}.page-corner-next:hover:before{transform:rotate(90deg) scale(1.04);filter:drop-shadow(-6px -5px 5px #3e2a1c55)}
+.page-corner-prev:hover:before{transform:rotate(-90deg) scale(1.04);filter:drop-shadow(-6px -5px 5px #3e2a1c55)}
 .page-corner span{display:none!important}
 .page-corner:disabled{opacity:.22}
 .page-corner:disabled:before{filter:none;box-shadow:2px 3px 4px #2d1e1728}
